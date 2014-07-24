@@ -1,6 +1,6 @@
 {
-  "name": "dbver",
-  "description": "MySQL Database Versioning.",
+  "name": "myss",
+  "description": "MySQL Database Snapshot Tool",
   "version": "0.0.1",
   "engines": {
     "node": ">=0.10.8"

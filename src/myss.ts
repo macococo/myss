@@ -113,7 +113,7 @@ class Myss {
                         });
                 });
             }
-        });
+        }.bind(this));
     }
 
     public delete(targets:string[]):void {

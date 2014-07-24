@@ -100,7 +100,7 @@ var Myss = (function () {
                     });
                 });
             }
-        });
+        }.bind(this));
     };
 
     Myss.prototype.delete = function (targets) {
