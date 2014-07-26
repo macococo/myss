@@ -165,13 +165,17 @@ class Myss {
         return {
             db: db,
             dbDir: this.home + "/" + db,
-            snapName: this.extract(targets, 1) || DEFAULT_SNAPSHOT_NAME,
+            snapName: this.escapePathDelimiter(this.extract(targets, 1) || DEFAULT_SNAPSHOT_NAME),
             options: this.extract(targets, 2)
         }
     }
 
     private extract(array, index):any {
         return !_.isEmpty(array) && array.length > index ? array[index] : null;
+    }
+
+    private escapePathDelimiter(path):string {
+        return path.replace(/[\\\/]/g, '_');
     }
 
     private existDatabase(db:string):PromiseTs.Promise {

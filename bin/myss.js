@@ -149,13 +149,17 @@ var Myss = (function () {
         return {
             db: db,
             dbDir: this.home + "/" + db,
-            snapName: this.extract(targets, 1) || DEFAULT_SNAPSHOT_NAME,
+            snapName: this.escapePathDelimiter(this.extract(targets, 1) || DEFAULT_SNAPSHOT_NAME),
             options: this.extract(targets, 2)
         };
     };
 
     Myss.prototype.extract = function (array, index) {
         return !_.isEmpty(array) && array.length > index ? array[index] : null;
+    };
+
+    Myss.prototype.escapePathDelimiter = function (path) {
+        return path.replace(/[\\\/]/g, '_');
     };
 
     Myss.prototype.existDatabase = function (db) {
