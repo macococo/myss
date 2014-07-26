@@ -1,4 +1,4 @@
-var _ = require("underscore"), fs = require("fs-extra"), exec = require('child_process').exec, mkdirp = require('mkdirp'), Promise = require('promise');
+var pjson = require('../package.json'), _ = require("underscore"), program = require('commander'), fs = require("fs-extra"), exec = require('child_process').exec, mkdirp = require('mkdirp'), Promise = require('promise');
 
 var ENV_MYSS_HOME = "MYSS_HOME", ENV_MYSS_MYSQLDUMP_OPTIONS = "MYSS_MYSQLDUMP_OPTIONS", DEFAULT_SNAPSHOT_NAME = "default";
 
@@ -19,11 +19,11 @@ var Myss = (function () {
 
         var options = this.createOptions(targets), dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
-        this.mkdirIfNotExist(options.dbDir).then(function (exists) {
-            this.existDatabase(options.db).then(function (exists) {
-                if (!exists) {
-                    this.error("database not found.");
-                } else {
+        this.existDatabase(options.db).then(function (exists) {
+            if (!exists) {
+                this.error("database not found.");
+            } else {
+                this.mkdirIfNotExist(options.dbDir).then(function (exists) {
                     fs.exists(dumpPath, function (exists) {
                         if (exists) {
                             this.error("database snapshot already exists.");
@@ -32,22 +32,7 @@ var Myss = (function () {
                             this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
                         }
                     }.bind(this));
-                }
-            }.bind(this));
-        }.bind(this));
-    };
-
-    Myss.prototype.snap = function (targets) {
-        if (_.isEmpty(targets)) {
-            return this.error("arguments invalid.");
-        }
-
-        var options = this.createOptions(targets), dumpPath = options.dbDir + "/" + options.snapName + ".sql";
-
-        fs.exists(options.dbDir, function (exists) {
-            if (!exists) {
-                this.error("database not found.");
-            } else {
+                }.bind(this));
             }
         }.bind(this));
     };
@@ -203,35 +188,12 @@ var Myss = (function () {
     return Myss;
 })();
 
-var argv = require("argv");
+program.version(pjson.version).option("add <database name> <snapshot name>", "add database snapshot.").option("use <database name> <snapshot name>", "use database snapshot.").option("delete <database name>", "delete database.").option("delete <database name> <snapshot name>", "delete database snapshot.").option("list", "list databases.").option("list <database name>", "list database snapshots.").parse(process.argv);
 
-argv.mod({
-    mod: "add",
-    description: "add database.",
-    options: []
-});
-argv.mod({
-    mod: "snap",
-    description: "create database snapshot.",
-    options: []
-});
-argv.mod({
-    mod: "use",
-    description: "use database snapshot.",
-    options: []
-});
-argv.mod({
-    mod: "delete",
-    description: "delete database, or snapshot.",
-    options: []
-});
-argv.mod({
-    mod: "list",
-    description: "list database, or snapshot.",
-    options: []
-});
+if (program.rawArgs.length >= 3) {
+    var command = program.rawArgs[2], args = program.rawArgs.slice(3, program.rawArgs.length);
 
-var arg = argv.run();
-if (arg.mod) {
-    new Myss((process.env[ENV_MYSS_HOME] || process.env["HOME"] + "/.myss")).exec(arg.mod, arg.targets);
+    new Myss((process.env[ENV_MYSS_HOME] || process.env["HOME"] + "/.myss")).exec(command, args);
+} else {
+    program.help();
 }

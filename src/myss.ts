@@ -1,6 +1,8 @@
 /// <reference path="../typings/tsd.d.ts" />
 
-var _:UnderscoreStatic = require("underscore"),
+var pjson = require('../package.json'),
+    _:UnderscoreStatic = require("underscore"),
+    program = require('commander'),
     fs = require("fs-extra"),
     exec = require('child_process').exec,
     mkdirp:any = require('mkdirp'),
@@ -32,11 +34,11 @@ class Myss {
         var options = this.createOptions(targets),
             dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
-        this.mkdirIfNotExist(options.dbDir).then(function(exists:boolean):void {
-            this.existDatabase(options.db).then(function(exists:boolean):void {
-                if (!exists) {
-                    this.error("database not found.");
-                } else {
+        this.existDatabase(options.db).then(function(exists:boolean):void {
+            if (!exists) {
+                this.error("database not found.");
+            } else {
+                this.mkdirIfNotExist(options.dbDir).then(function(exists:boolean):void {
                     fs.exists(dumpPath, function(exists:boolean):void {
                         if (exists) {
                             this.error("database snapshot already exists.");
@@ -45,23 +47,7 @@ class Myss {
                             this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
                         }
                     }.bind(this));
-                }
-            }.bind(this));
-        }.bind(this));
-    }
-
-    public snap(targets:string[]):void {
-        if (_.isEmpty(targets)) {
-            return this.error("arguments invalid.");
-        }
-
-        var options = this.createOptions(targets),
-            dumpPath = options.dbDir + "/" + options.snapName + ".sql";
-
-        fs.exists(options.dbDir, function(exists:boolean):void {
-            if (!exists) {
-                this.error("database not found.");
-            } else {
+                }.bind(this));
             }
         }.bind(this));
     }
@@ -218,37 +204,23 @@ class Myss {
 
 }
 
-var argv = require("argv");
+program
+    .version(pjson.version)
+    .option("add <database name> <snapshot name>", "add database snapshot.")
+    .option("use <database name> <snapshot name>", "use database snapshot.")
+    .option("delete <database name>", "delete database.")
+    .option("delete <database name> <snapshot name>", "delete database snapshot.")
+    .option("list", "list databases.")
+    .option("list <database name>", "list database snapshots.")
+    .parse(process.argv);
 
-argv.mod({
-    mod: "add",
-    description: "add database.",
-    options: []
-});
-argv.mod({
-    mod: "snap",
-    description: "create database snapshot.",
-    options: []
-});
-argv.mod({
-    mod: "use",
-    description: "use database snapshot.",
-    options: []
-});
-argv.mod({
-    mod: "delete",
-    description: "delete database, or snapshot.",
-    options: []
-});
-argv.mod({
-    mod: "list",
-    description: "list database, or snapshot.",
-    options: []
-});
+if (program.rawArgs.length >= 3) {
+    var command = program.rawArgs[2],
+        args = program.rawArgs.slice(3, program.rawArgs.length);
 
-var arg = argv.run();
-if (arg.mod) {
     new Myss(
         (process.env[ENV_MYSS_HOME] || process.env["HOME"] + "/.myss")
-    ).exec(arg.mod, arg.targets);
+    ).exec(command, args);
+} else {
+    program.help();
 }

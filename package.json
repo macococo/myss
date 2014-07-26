@@ -6,7 +6,7 @@
     "node": ">=0.10.8"
   },
   "dependencies": {
-    "argv": "0.0.2",
+    "commander": "^2.3.0",
     "fs-extra": "^0.10.0",
     "mkdirp": "^0.5.0",
     "promise": "^5.0.0",
