@@ -1,6 +1,17 @@
-var pjson = require('../package.json'), _ = require("underscore"), program = require('commander'), fs = require("fs-extra"), exec = require('child_process').exec, mkdirp = require('mkdirp'), Promise = require('promise');
+var pjson = require('../package.json'), _ = require("underscore"), program = require('commander'), util = require("util"), fs = require("fs-extra"), exec = require('child_process').exec, mkdirp = require('mkdirp'), Promise = require('promise');
 
 var ENV_MYSS_HOME = "MYSS_HOME", ENV_MYSS_MYSQLDUMP_OPTIONS = "MYSS_MYSQLDUMP_OPTIONS", DEFAULT_SNAPSHOT_NAME = "default";
+
+util.println = function (message) {
+    util.print(message + "\n");
+};
+util.fmterror = function () {
+    var message = [];
+    for (var _i = 0; _i < (arguments.length - 0); _i++) {
+        message[_i] = arguments[_i + 0];
+    }
+    util.error(util.format.apply(this, message));
+};
 
 var Myss = (function () {
     function Myss(home) {
@@ -14,19 +25,19 @@ var Myss = (function () {
 
     Myss.prototype.add = function (targets) {
         if (_.isEmpty(targets)) {
-            return this.error("invalid arguments.");
+            return util.fmterror("invalid arguments.");
         }
 
         var options = this.createOptions(targets), dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
         this.existDatabase(options.db).then(function (exists) {
             if (!exists) {
-                this.error("database not found.");
+                util.fmterror("database '%s' not found.", options.db);
             } else {
                 this.mkdirIfNotExist(options.dbDir).then(function (exists) {
                     fs.exists(dumpPath, function (exists) {
                         if (exists) {
-                            this.error("database snapshot already exists.");
+                            util.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
                         } else {
                             var dumpOptions = options.options || process.env[ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";
                             this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
@@ -39,18 +50,18 @@ var Myss = (function () {
 
     Myss.prototype.use = function (targets) {
         if (_.isEmpty(targets)) {
-            return this.error("arguments invalid.");
+            return util.fmterror("arguments invalid.");
         }
 
         var options = this.createOptions(targets), dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
         fs.exists(options.dbDir, function (exists) {
             if (!exists) {
-                this.error("database not found.");
+                util.fmterror("database '%s' not found.", options.db);
             } else {
                 fs.exists(dumpPath, function (exists) {
                     if (!exists) {
-                        this.error("database snapshot not found.");
+                        util.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
                     } else {
                         this.execCommand("mysql -uroot " + options.db + " < " + dumpPath);
                     }
@@ -71,7 +82,7 @@ var Myss = (function () {
                     files.filter(function (file) {
                         return fs.statSync(options.dbDir + "/" + file).isFile();
                     }).forEach(function (file) {
-                        console.log(file.substring(0, file.lastIndexOf(".")));
+                        util.println(file.substring(0, file.lastIndexOf(".")));
                     });
                 });
             } else {
@@ -82,7 +93,7 @@ var Myss = (function () {
                     files.filter(function (file) {
                         return fs.statSync(options.dbDir + "/" + file).isDirectory();
                     }).forEach(function (file) {
-                        console.log(file);
+                        util.println(file);
                     });
                 });
             }
@@ -91,7 +102,7 @@ var Myss = (function () {
 
     Myss.prototype.delete = function (targets) {
         if (_.isEmpty(targets)) {
-            return this.error("arguments invalid.");
+            return util.fmterror("arguments invalid.");
         }
 
         var options = this.createOptions(targets);
@@ -99,9 +110,9 @@ var Myss = (function () {
             var path = options.dbDir;
             fs.exists(path, function (exists) {
                 if (!exists) {
-                    this.error("database not found.");
+                    util.fmterror("database '%s' not found.", options.db);
                 } else {
-                    console.log("delete: " + path);
+                    util.println("delete: " + path);
                     fs.remove(path);
                 }
             }.bind(this));
@@ -109,16 +120,16 @@ var Myss = (function () {
             var path = options.dbDir + "/" + options.snapName + ".sql";
             fs.exists(path, function (exists) {
                 if (!exists) {
-                    this.error("database snapshot not found.");
+                    util.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
                 } else {
                     fs.readdir(options.dbDir, function (err, files) {
                         if (err)
                             throw err;
 
                         if (files.length == 1) {
-                            this.error("last database snapshot can't be deleted.");
+                            util.fmterror("database snapshot is not possible to delete all.");
                         } else {
-                            console.log("delete: " + path);
+                            util.println("delete: " + path);
                             fs.remove(path);
                         }
                     }.bind(this));
@@ -156,7 +167,7 @@ var Myss = (function () {
     };
 
     Myss.prototype.execCommand = function (cmd) {
-        console.log(cmd);
+        util.println(cmd);
         return new Promise(function (resolve, reject) {
             exec(cmd, function (err, stdout, stderr) {
                 if (err)
@@ -180,10 +191,6 @@ var Myss = (function () {
                 }
             });
         });
-    };
-
-    Myss.prototype.error = function (message) {
-        console.error(message);
     };
     return Myss;
 })();

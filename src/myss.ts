@@ -3,14 +3,24 @@
 var pjson = require('../package.json'),
     _:UnderscoreStatic = require("underscore"),
     program = require('commander'),
+    util = require("util"),
     fs = require("fs-extra"),
     exec = require('child_process').exec,
     mkdirp:any = require('mkdirp'),
     Promise = require('promise');
 
+// Constants
 var ENV_MYSS_HOME:string = "MYSS_HOME",
     ENV_MYSS_MYSQLDUMP_OPTIONS:string = "MYSS_MYSQLDUMP_OPTIONS",
     DEFAULT_SNAPSHOT_NAME:string = "default";
+
+// Utilities
+util.println = function(message:string):void {
+    util.print(message + "\n");
+}
+util.fmterror = function(...message:any[]):void {
+    util.error(util.format.apply(this, message));
+}
 
 class Myss {
 
@@ -28,7 +38,7 @@ class Myss {
 
     public add(targets:string[]):void {
         if (_.isEmpty(targets)) {
-            return this.error("invalid arguments.");
+            return util.fmterror("invalid arguments.");
         }
 
         var options = this.createOptions(targets),
@@ -36,12 +46,12 @@ class Myss {
 
         this.existDatabase(options.db).then(function(exists:boolean):void {
             if (!exists) {
-                this.error("database not found.");
+                util.fmterror("database '%s' not found.", options.db);
             } else {
                 this.mkdirIfNotExist(options.dbDir).then(function(exists:boolean):void {
                     fs.exists(dumpPath, function(exists:boolean):void {
                         if (exists) {
-                            this.error("database snapshot already exists.");
+                            util.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
                         } else {
                             var dumpOptions = options.options || process.env[ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";
                             this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
@@ -54,7 +64,7 @@ class Myss {
 
     public use(targets:string[]):void {
         if (_.isEmpty(targets)) {
-            return this.error("arguments invalid.");
+            return util.fmterror("arguments invalid.");
         }
 
         var options = this.createOptions(targets),
@@ -62,11 +72,11 @@ class Myss {
 
         fs.exists(options.dbDir, function(exists:boolean):void {
             if (!exists) {
-                this.error("database not found.");
+                util.fmterror("database '%s' not found.", options.db);
             } else {
                 fs.exists(dumpPath, function(exists:boolean):void {
                     if (!exists) {
-                        this.error("database snapshot not found.");
+                        util.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
                     } else {
                         this.execCommand("mysql -uroot " + options.db + " < " + dumpPath);
                     }
@@ -87,7 +97,7 @@ class Myss {
                         .filter(function(file){
                             return fs.statSync(options.dbDir + "/" + file).isFile();
                         }).forEach(function (file) {
-                            console.log(file.substring(0, file.lastIndexOf(".")));
+                            util.println(file.substring(0, file.lastIndexOf(".")));
                         });
                 });
             } else {
@@ -98,7 +108,7 @@ class Myss {
                         .filter(function(file){
                             return fs.statSync(options.dbDir + "/" + file).isDirectory();
                         }).forEach(function (file) {
-                            console.log(file);
+                            util.println(file);
                         });
                 });
             }
@@ -107,7 +117,7 @@ class Myss {
 
     public delete(targets:string[]):void {
         if (_.isEmpty(targets)) {
-            return this.error("arguments invalid.");
+            return util.fmterror("arguments invalid.");
         }
 
         var options = this.createOptions(targets);
@@ -115,9 +125,9 @@ class Myss {
             var path:string = options.dbDir;
             fs.exists(path, function(exists:boolean):void {
                 if (!exists) {
-                    this.error("database not found.");
+                    util.fmterror("database '%s' not found.", options.db);
                 } else {
-                    console.log("delete: " + path);
+                    util.println("delete: " + path);
                     fs.remove(path);
                 }
             }.bind(this));
@@ -126,15 +136,15 @@ class Myss {
             var path:string = options.dbDir + "/" + options.snapName + ".sql";
             fs.exists(path, function(exists:boolean):void {
                 if (!exists) {
-                    this.error("database snapshot not found.");
+                    util.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
                 } else {
                     fs.readdir(options.dbDir, function(err:NodeJS.ErrnoException, files:string[]):void {
                         if (err) throw err;
 
                         if (files.length == 1) {
-                            this.error("last database snapshot can't be deleted.");
+                            util.fmterror("database snapshot is not possible to delete all.");
                         } else {
-                            console.log("delete: " + path);
+                            util.println("delete: " + path);
                             fs.remove(path);
                         }
                     }.bind(this));
@@ -174,7 +184,7 @@ class Myss {
     }
 
     private execCommand(cmd:string):PromiseTs.Promise {
-        console.log(cmd);
+        util.println(cmd);
         return new Promise(function(resolve, reject):void {
             exec(cmd, function(err, stdout, stderr):void {
                 if (err) reject(err);
@@ -196,10 +206,6 @@ class Myss {
                 }
             });
         });
-    }
-
-    private error(message:string):void {
-        console.error(message);
     }
 
 }
