@@ -1,6 +1,6 @@
 var _ = require("underscore"), fs = require("fs-extra"), exec = require('child_process').exec, mkdirp = require('mkdirp'), Promise = require('promise');
 
-var DEFAULT_SNAPSHOT_NAME = "default";
+var ENV_MYSS_HOME = "MYSS_HOME", ENV_MYSS_MYSQLDUMP_OPTIONS = "MYSS_MYSQLDUMP_OPTIONS", DEFAULT_SNAPSHOT_NAME = "default";
 
 var Myss = (function () {
     function Myss(home) {
@@ -28,7 +28,8 @@ var Myss = (function () {
                         if (exists) {
                             this.error("database snapshot already exists.");
                         } else {
-                            this.execCommand("mysqldump -uroot " + options.db + " > " + dumpPath);
+                            var dumpOptions = options.options || process.env[ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";
+                            this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
                         }
                     }.bind(this));
                 }
@@ -144,12 +145,17 @@ var Myss = (function () {
     Myss.prototype.createOptions = function (targets) {
         targets = targets || [];
 
-        var db = (targets.length > 0) ? targets[0] : "";
+        var db = this.extract(targets, 0) || "";
         return {
             db: db,
             dbDir: this.home + "/" + db,
-            snapName: (targets.length > 1) ? targets[1] : DEFAULT_SNAPSHOT_NAME
+            snapName: this.extract(targets, 1) || DEFAULT_SNAPSHOT_NAME,
+            options: this.extract(targets, 2)
         };
+    };
+
+    Myss.prototype.extract = function (array, index) {
+        return !_.isEmpty(array) && array.length > index ? array[index] : null;
     };
 
     Myss.prototype.existDatabase = function (db) {
@@ -161,7 +167,7 @@ var Myss = (function () {
     };
 
     Myss.prototype.execCommand = function (cmd) {
-        console.log("exec: " + cmd);
+        console.log(cmd);
         return new Promise(function (resolve, reject) {
             exec(cmd, function (err, stdout, stderr) {
                 if (err)
@@ -223,5 +229,5 @@ argv.mod({
 
 var arg = argv.run();
 if (arg.mod) {
-    new Myss(process.env["HOME"] + "/.myss").exec(arg.mod, arg.targets);
+    new Myss((process.env[ENV_MYSS_HOME] || process.env["HOME"] + "/.myss")).exec(arg.mod, arg.targets);
 }

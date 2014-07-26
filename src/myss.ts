@@ -6,7 +6,9 @@ var _:UnderscoreStatic = require("underscore"),
     mkdirp:any = require('mkdirp'),
     Promise = require('promise');
 
-var DEFAULT_SNAPSHOT_NAME:string = "default";
+var ENV_MYSS_HOME:string = "MYSS_HOME",
+    ENV_MYSS_MYSQLDUMP_OPTIONS:string = "MYSS_MYSQLDUMP_OPTIONS",
+    DEFAULT_SNAPSHOT_NAME:string = "default";
 
 class Myss {
 
@@ -39,7 +41,8 @@ class Myss {
                         if (exists) {
                             this.error("database snapshot already exists.");
                         } else {
-                            this.execCommand("mysqldump -uroot " + options.db + " > " + dumpPath);
+                            var dumpOptions = options.options || process.env[ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";
+                            this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
                         }
                     }.bind(this));
                 }
@@ -158,12 +161,17 @@ class Myss {
     private createOptions(targets:string[]):any {
         targets = targets || [];
 
-        var db = (targets.length > 0) ? targets[0] : "";
+        var db = this.extract(targets, 0) || "";
         return {
             db: db,
             dbDir: this.home + "/" + db,
-            snapName: (targets.length > 1) ? targets[1] : DEFAULT_SNAPSHOT_NAME
+            snapName: this.extract(targets, 1) || DEFAULT_SNAPSHOT_NAME,
+            options: this.extract(targets, 2)
         }
+    }
+
+    private extract(array, index):any {
+        return !_.isEmpty(array) && array.length > index ? array[index] : null;
     }
 
     private existDatabase(db:string):PromiseTs.Promise {
@@ -176,7 +184,7 @@ class Myss {
     }
 
     private execCommand(cmd:string):PromiseTs.Promise {
-        console.log("exec: " + cmd);
+        console.log(cmd);
         return new Promise(function(resolve, reject):void {
             exec(cmd, function(err, stdout, stderr):void {
                 if (err) reject(err);
@@ -237,6 +245,6 @@ argv.mod({
 var arg = argv.run();
 if (arg.mod) {
     new Myss(
-        process.env["HOME"] + "/.myss"
+        (process.env[ENV_MYSS_HOME] || process.env["HOME"] + "/.myss")
     ).exec(arg.mod, arg.targets);
 }
