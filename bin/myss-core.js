@@ -142,7 +142,7 @@ var Myss = (function () {
 
     Myss.prototype.mkdirIfNotExist = function (dir) {
         return new Promise(function (resolve, reject) {
-            if (fs.existsSync(dir)) {
+            if (!fs.existsSync(dir)) {
                 fs.mkdirsSync(dir);
                 resolve(false);
             } else {

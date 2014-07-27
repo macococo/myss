@@ -165,7 +165,7 @@ class Myss {
 
     private mkdirIfNotExist(dir:string):PromiseTs.Promise {
         return new Promise(function(resolve, reject):void {
-            if (fs.existsSync(dir)) {
+            if (!fs.existsSync(dir)) {
                 fs.mkdirsSync(dir);
                 resolve(false);
             } else {
