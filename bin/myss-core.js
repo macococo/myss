@@ -1,4 +1,4 @@
-var pjson = require('../package.json'), _ = require("underscore"), program = require('commander'), util = require("util"), fs = require("fs-extra"), exec = require('child_process').exec, mkdirp = require('mkdirp'), Promise = require('promise');
+var pjson = require('../package.json'), _ = require("underscore"), program = require('commander'), util = require("util"), fs = require("fs-extra"), exec = require('child_process').exec, Promise = require('promise');
 
 var Myss = (function () {
     function Myss(home) {

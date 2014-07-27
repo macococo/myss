@@ -1,7 +1,7 @@
 {
   "name": "myss",
   "description": "MySQL Database Snapshot Tool",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Makoto Kudo <dev@mof-brown.jp>",
   "repository": {
     "type": "git",
@@ -21,7 +21,6 @@
   "dependencies": {
     "commander": "^2.3.0",
     "fs-extra": "^0.10.0",
-    "mkdirp": "^0.5.0",
     "promise": "^5.0.0",
     "underscore": "^1.6.0"
   },

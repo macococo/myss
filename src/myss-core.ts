@@ -6,7 +6,6 @@ var pjson = require('../package.json'),
     util = require("util"),
     fs = require("fs-extra"),
     exec = require('child_process').exec,
-    mkdirp:any = require('mkdirp'),
     Promise = require('promise');
 
 class Myss {
