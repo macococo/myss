@@ -2,9 +2,19 @@
   "name": "myss",
   "description": "MySQL Database Snapshot Tool",
   "version": "0.0.1",
+  "author": "Makoto Kudo <dev@mof-brown.jp>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/macococo/myss"
+  },
+  "keywords": [
+    "mysql",
+    "mysqldump"
+  ],
   "engines": {
     "node": ">=0.10.8"
   },
+  "bin": "bin/myss",
   "scripts": {
     "test": "mocha"
   },
@@ -22,5 +32,6 @@
     "grunt-typescript": "^0.3.8",
     "mocha": "^1.21.0",
     "sinon": "^1.10.3"
-  }
+  },
+  "readmeFilename": "README.md"
 }
