@@ -2,6 +2,9 @@ myss
 ====
 
 [![Build Status](https://travis-ci.org/macococo/myss.svg?branch=master)](https://travis-ci.org/macococo/myss)
+[![NPM version](https://badge.fury.io/js/myss.svg)](http://badge.fury.io/js/myss)
+[![Dependency Status](https://david-dm.org/macococo/myss.svg)](https://david-dm.org/macococo/myss)
+[![devDependency Status](https://david-dm.org/macococo/myss/dev-status.svg)](https://david-dm.org/macococo/myss#info=devDependencies)
 
 using the "mysqldump" command, a simple snapshot tool.
 
