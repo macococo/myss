@@ -6,7 +6,7 @@
   "bundle": "typings/tsd.d.ts",
   "installed": {
     "node/node.d.ts": {
-      "commit": "5a8f9e312f3db37b8efc4dcdd1de204f60e67eb1"
+      "commit": "2f785c6abdba5c28e886b4d134966acc868018ce"
     },
     "underscore/underscore.d.ts": {
       "commit": "5a8f9e312f3db37b8efc4dcdd1de204f60e67eb1"
@@ -19,6 +19,18 @@
     },
     "mocha/mocha.d.ts": {
       "commit": "a9960f762090ba1aa7e59ff8f8f78e1ed04aa51b"
+    },
+    "fs-extra/fs-extra.d.ts": {
+      "commit": "2f785c6abdba5c28e886b4d134966acc868018ce"
+    },
+    "should/should.d.ts": {
+      "commit": "2f785c6abdba5c28e886b4d134966acc868018ce"
+    },
+    "sinon/sinon.d.ts": {
+      "commit": "2f785c6abdba5c28e886b4d134966acc868018ce"
+    },
+    "assert/assert.d.ts": {
+      "commit": "2f785c6abdba5c28e886b4d134966acc868018ce"
     }
   }
 }

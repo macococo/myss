@@ -3,7 +3,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     watch: {
       scripts: {
-        files: ['src/**/*.ts', 'src/**/*.html'],
+        files: ['src/**/*.ts', 'src/**/*.html', 'test/**/*.ts'],
         tasks: ['typescript']
       }
     },

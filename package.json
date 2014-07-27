@@ -20,6 +20,7 @@
     "grunt-cli": "0.1.13",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-typescript": "^0.3.8",
-    "mocha": "^1.21.0"
+    "mocha": "^1.21.0",
+    "sinon": "^1.10.3"
   }
 }
