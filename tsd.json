@@ -13,6 +13,12 @@
     },
     "mkdirp/mkdirp.d.ts": {
       "commit": "5a8f9e312f3db37b8efc4dcdd1de204f60e67eb1"
+    },
+    "commander/commander.d.ts": {
+      "commit": "a9960f762090ba1aa7e59ff8f8f78e1ed04aa51b"
+    },
+    "mocha/mocha.d.ts": {
+      "commit": "a9960f762090ba1aa7e59ff8f8f78e1ed04aa51b"
     }
   }
 }

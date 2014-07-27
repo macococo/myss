@@ -16,6 +16,15 @@ module.exports = function(grunt) {
           target: 'es5',
           basePath: 'src'
         }
+      },
+      test: {
+        src: ['test/**/*.ts'],
+        dest: 'test',
+        options: {
+          module: 'commonjs',
+          target: 'es5',
+          basePath: 'test'
+        }
       }
     }
   });
