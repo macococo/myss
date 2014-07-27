@@ -1,6 +1,8 @@
 myss
 ====
 
+[![Build Status](https://travis-ci.org/macococo/myss.svg?branch=master)](https://travis-ci.org/macococo/myss)
+
 using the "mysqldump" command, a simple snapshot tool.
 
 Install
