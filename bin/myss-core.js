@@ -22,14 +22,12 @@ var Myss = (function () {
                 Myss.fmterror("database '%s' not found.", options.db);
             } else {
                 this.mkdirIfNotExist(options.dbDir).then(function (exists) {
-                    fs.exists(dumpPath, function (exists) {
-                        if (exists) {
-                            Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
-                        } else {
-                            var dumpOptions = options.options || process.env[Myss.ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";
-                            this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
-                        }
-                    }.bind(this));
+                    if (fs.existsSync(dumpPath)) {
+                        Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
+                    } else {
+                        var dumpOptions = options.options || process.env[Myss.ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";
+                        this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
+                    }
                 }.bind(this));
             }
         }.bind(this));
@@ -42,19 +40,15 @@ var Myss = (function () {
 
         var options = this.createOptions(targets), dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
-        fs.exists(options.dbDir, function (exists) {
-            if (!exists) {
-                Myss.fmterror("database '%s' not found.", options.db);
+        if (!fs.existsSync(options.dbDir)) {
+            Myss.fmterror("database '%s' not found.", options.db);
+        } else {
+            if (!fs.existsSync(dumpPath)) {
+                Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
             } else {
-                fs.exists(dumpPath, function (exists) {
-                    if (!exists) {
-                        Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
-                    } else {
-                        this.execCommand("mysql -uroot " + options.db + " < " + dumpPath);
-                    }
-                }.bind(this));
+                this.execCommand("mysql -uroot " + options.db + " < " + dumpPath);
             }
-        }.bind(this));
+        }
     };
 
     Myss.prototype.list = function (targets) {
@@ -62,26 +56,16 @@ var Myss = (function () {
 
         this.mkdirIfNotExist(options.dbDir).then(function (exists) {
             if (options.db) {
-                fs.readdir(options.dbDir, function (err, files) {
-                    if (err)
-                        throw err;
-
-                    files.filter(function (file) {
-                        return fs.statSync(options.dbDir + "/" + file).isFile();
-                    }).forEach(function (file) {
-                        Myss.println(file.substring(0, file.lastIndexOf(".")));
-                    });
+                fs.readdirSync(options.dbDir).filter(function (file) {
+                    return fs.statSync(options.dbDir + "/" + file).isFile();
+                }).forEach(function (file) {
+                    Myss.println(file.substring(0, file.lastIndexOf(".")));
                 });
             } else {
-                fs.readdir(this.home, function (err, files) {
-                    if (err)
-                        throw err;
-
-                    files.filter(function (file) {
-                        return fs.statSync(options.dbDir + "/" + file).isDirectory();
-                    }).forEach(function (file) {
-                        Myss.println(file);
-                    });
+                fs.readdirSync(this.home).filter(function (file) {
+                    return fs.statSync(options.dbDir + "/" + file).isDirectory();
+                }).forEach(function (file) {
+                    Myss.println(file);
                 });
             }
         }.bind(this));
@@ -95,33 +79,25 @@ var Myss = (function () {
         var options = this.createOptions(targets);
         if (targets.length == 1) {
             var path = options.dbDir;
-            fs.exists(path, function (exists) {
-                if (!exists) {
-                    Myss.fmterror("database '%s' not found.", options.db);
-                } else {
-                    Myss.println("delete: " + path);
-                    fs.remove(path);
-                }
-            }.bind(this));
+            if (!fs.existsSync(path)) {
+                Myss.fmterror("database '%s' not found.", options.db);
+            } else {
+                Myss.println("delete: " + path);
+                fs.removeSync(path);
+            }
         } else {
             var path = options.dbDir + "/" + options.snapName + ".sql";
-            fs.exists(path, function (exists) {
-                if (!exists) {
-                    Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
+            if (!fs.existsSync(path)) {
+                Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
+            } else {
+                var files = fs.readdirSync(options.dbDir);
+                if (files.length == 1) {
+                    Myss.fmterror("database snapshot is not possible to delete all.");
                 } else {
-                    fs.readdir(options.dbDir, function (err, files) {
-                        if (err)
-                            throw err;
-
-                        if (files.length == 1) {
-                            Myss.fmterror("database snapshot is not possible to delete all.");
-                        } else {
-                            Myss.println("delete: " + path);
-                            fs.remove(path);
-                        }
-                    }.bind(this));
+                    Myss.println("delete: " + path);
+                    fs.removeSync(path);
                 }
-            }.bind(this));
+            }
         }
     };
 
@@ -166,17 +142,12 @@ var Myss = (function () {
 
     Myss.prototype.mkdirIfNotExist = function (dir) {
         return new Promise(function (resolve, reject) {
-            fs.exists(dir, function (exists) {
-                if (!exists) {
-                    mkdirp(dir, function (err) {
-                        if (err)
-                            reject(err);
-                        resolve(false);
-                    });
-                } else {
-                    resolve(true);
-                }
-            });
+            if (fs.existsSync(dir)) {
+                fs.mkdirsSync(dir);
+                resolve(false);
+            } else {
+                resolve(true);
+            }
         });
     };
 
