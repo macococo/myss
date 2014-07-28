@@ -26,7 +26,7 @@ ENV
 Examples
 ========
 
-Create snapshot.
+create snapshot.
 
 ```
 $ myss add <database name> <snapshot name>
