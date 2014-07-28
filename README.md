@@ -11,8 +11,6 @@ using the "mysqldump" command, a simple snapshot tool.
 Install
 =======
 
-wait until register npm module...
-
 ```
 $ npm install -g myss
 ```
