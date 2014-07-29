@@ -26,10 +26,16 @@ ENV
 Examples
 ========
 
-create snapshot.
+add snapshot.
 
 ```
 $ myss add <database name> <snapshot name>
+```
+
+replace snapshot.
+
+```
+$ myss replace <database name> <snapshot name>
 ```
 
 list managed databases.
