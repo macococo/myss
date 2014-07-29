@@ -33,15 +33,26 @@ class Myss {
             return Myss.fmterror("invalid arguments.");
         }
 
-        var options = this.createOptions(targets),
-            dumpPath = options.dbDir + "/" + options.snapName + ".sql";
+        this.addSnapshot(this.createOptions(targets), false);
+    }
+
+    public replace(targets:string[]):void {
+        if (_.isEmpty(targets)) {
+            return Myss.fmterror("invalid arguments.");
+        }
+
+        this.addSnapshot(this.createOptions(targets), true);
+    }
+
+    private addSnapshot(options:any, replace:boolean):void {
+        var dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
         this.existDatabase(options.db).then(function(exists:boolean):void {
             if (!exists) {
                 Myss.fmterror("database '%s' not found.", options.db);
             } else {
                 this.mkdirIfNotExist(options.dbDir).then(function(exists:boolean):void {
-                    if (fs.existsSync(dumpPath)) {
+                    if (!replace && fs.existsSync(dumpPath)) {
                         Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
                     } else {
                         var dumpOptions = options.options || process.env[Myss.ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";

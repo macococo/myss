@@ -57,6 +57,34 @@ describe("myss", function () {
         });
     });
 
+    describe("replace", function () {
+        beforeEach(function () {
+            fs.removeSync(dir);
+            fs.mkdirsSync(dir);
+        });
+
+        afterEach(function () {
+            execStub.reset();
+            fs.removeSync(dir);
+        });
+
+        it("replace exist database", function (done) {
+            fs.mkdirsSync(dir + "/test");
+            fs.outputFileSync(dir + "/test/default.sql", "hello!");
+
+            var firstCall = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
+            var secondCall = execStub.withArgs("mysqldump -u root test > ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
+            myss.replace(["test"]);
+
+            setTimeout(function () {
+                assert.equal(firstCall.calledOnce, true);
+                assert.equal(secondCall.calledOnce, true);
+
+                done();
+            }, 100);
+        });
+    });
+
     describe("delete", function () {
         beforeEach(function () {
             fs.removeSync(dir);

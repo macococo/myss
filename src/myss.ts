@@ -7,6 +7,7 @@ var pjson = require('../package.json'),
 program
     .version(pjson.version)
     .option("add <database name> <snapshot name>", "add database snapshot.")
+    .option("replace <database name> <snapshot name>", "add or replace database snapshot.")
     .option("use <database name> <snapshot name>", "use database snapshot.")
     .option("delete <database name>", "delete database.")
     .option("delete <database name> <snapshot name>", "delete database snapshot.")
