@@ -10,6 +10,8 @@ declare module "commander" {
         */
         name: string;
 
+        rawArgs: any[];
+
         //
         //
         // NOTE: the methods below are COPIED to the module
@@ -65,6 +67,7 @@ declare module "commander" {
         */
         usage(usage: string): Command;
         usage(): string;
+        help(): string;
 
         /*
         * Prompt the user for a value, calling the callback function.
@@ -174,6 +177,8 @@ declare module "commander" {
     */
     export function usage(usage: string): Command;
     export function usage(): string;
+
+    export function help(): string;
 
     /*
     * Prompt the user for a value, calling the callback function.

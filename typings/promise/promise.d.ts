@@ -1,4 +1,4 @@
-declare module PromiseTs {
+declare module "promise" {
     class Promise {
         constructor(callback: (resolve: Function, reject: Function) => void);
         then(doneFilter: Function, failFilter?: Function, progressFilter?: Function): Promise;
@@ -6,8 +6,5 @@ declare module PromiseTs {
         fail(...callbacks: Function[]): Promise;
         always(...callbacks: Function[]): Promise;
     }
-}
-
-declare module "promise" {
-    export = PromiseTs;
+    export = Promise
 }

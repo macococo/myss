@@ -1,16 +1,17 @@
 /// <reference path="../typings/tsd.d.ts" />
 
-var assert = require("assert"),
-    sinon:SinonStatic = require("sinon"),
-    fs = require("fs-extra");
+import fs = require("fs-extra");
+import assert = require("assert");
+import sinon = require("sinon");
+import child_process = require('child_process');
 
-var execStub = require("child_process").exec = sinon.stub();
-var MyssCore = require("../bin/myss-core");
+var myss = require('../bin/myss-core');
+var execStub = child_process.exec = sinon.stub();
 
 describe("myss", function():void {
 
     var dir = "./testdata",
-        myss = new MyssCore(dir);
+        runner = new myss.Runner(dir);
 
     describe("add", function():void {
 
@@ -27,7 +28,7 @@ describe("myss", function():void {
         it("add database without snapshot name", function(done:MochaDone):void {
             var firstCall:SinonSpy = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall:SinonSpy = execStub.withArgs("mysqldump -u root test > ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
-            myss.add(["test"]);
+            runner.add(["test"]);
 
             setTimeout(function():void {
                 assert.equal(firstCall.calledOnce, true);
@@ -40,7 +41,7 @@ describe("myss", function():void {
         it("add database with snapshot name", function(done:MochaDone):void {
             var firstCall:SinonSpy = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall:SinonSpy = execStub.withArgs("mysqldump -u root test > ./testdata/test/master.sql").callsArgWith(1, "", "success", "");
-            myss.add(["test", "master"]);
+            runner.add(["test", "master"]);
 
             setTimeout(function():void {
                 assert.equal(firstCall.calledOnce, true);
@@ -53,7 +54,7 @@ describe("myss", function():void {
         it("add not exist database", function(done:MochaDone):void {
             var firstCall:SinonSpy = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "", "");
             var secondCall:SinonSpy = execStub.withArgs("mysqldump -u root test > ./testdata/test/master.sql").callsArgWith(1, "", "success", "");
-            myss.add(["test"]);
+            runner.add(["test"]);
 
             setTimeout(function():void {
                 assert.equal(firstCall.calledOnce, true);
@@ -83,7 +84,7 @@ describe("myss", function():void {
 
             var firstCall:SinonSpy = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall:SinonSpy = execStub.withArgs("mysqldump -u root test > ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
-            myss.replace(["test"]);
+            runner.replace(["test"]);
 
             setTimeout(function():void {
                 assert.equal(firstCall.calledOnce, true);
@@ -109,7 +110,7 @@ describe("myss", function():void {
         it("delete database", function(done:MochaDone):void {
             fs.mkdirsSync(dir + "/test");
 
-            myss.delete(["test"]);
+            runner.delete(["test"]);
 
             setTimeout(function():void {
                 assert.equal(fs.existsSync(dir + "/test"), false);
@@ -119,7 +120,7 @@ describe("myss", function():void {
         });
 
         it("delete not exist database", function(done:MochaDone):void {
-            myss.delete(["test"]);
+            runner.delete(["test"]);
 
             setTimeout(function():void {
                 assert.equal(fs.existsSync(dir + "/test"), false);
@@ -132,7 +133,7 @@ describe("myss", function():void {
             fs.mkdirsSync(dir + "/test");
             fs.outputFileSync(dir + "/test/default.sql", "hello!");
 
-            myss.delete(["test", "default"]);
+            runner.delete(["test", "default"]);
 
             setTimeout(function():void {
                 assert.equal(fs.existsSync(dir + "/test"), true);
@@ -147,7 +148,7 @@ describe("myss", function():void {
             fs.outputFileSync(dir + "/test/default.sql", "hello!");
             fs.outputFileSync(dir + "/test/default_2.sql", "hello!");
 
-            myss.delete(["test", "default"]);
+            runner.delete(["test", "default"]);
 
             setTimeout(function():void {
                 assert.equal(fs.existsSync(dir + "/test"), true);
@@ -164,7 +165,7 @@ describe("myss", function():void {
         var printlnSpy = null;
 
         beforeEach(function():void {
-            printlnSpy = sinon.spy(MyssCore, "println");
+            printlnSpy = sinon.spy(myss, "println");
 
             fs.removeSync(dir);
             fs.mkdirsSync(dir);
@@ -176,7 +177,7 @@ describe("myss", function():void {
         });
 
         it("list empty database", function(done:MochaDone):void {
-            myss.list([]);
+            runner.list([]);
 
             setTimeout(function():void {
                 assert.equal(printlnSpy.called, false);
@@ -188,7 +189,7 @@ describe("myss", function():void {
         it("list databases", function(done:MochaDone):void {
             fs.mkdirsSync(dir + "/test");
 
-            myss.list([]);
+            runner.list([]);
 
             setTimeout(function():void {
                 assert.equal(printlnSpy.called, true);
@@ -201,7 +202,7 @@ describe("myss", function():void {
         it("list empty snapshot", function(done:MochaDone):void {
             fs.mkdirsSync(dir + "/test");
 
-            myss.list(["test"]);
+            runner.list(["test"]);
 
             setTimeout(function():void {
                 assert.equal(printlnSpy.called, false);
@@ -214,7 +215,7 @@ describe("myss", function():void {
             fs.mkdirsSync(dir + "/test");
             fs.outputFileSync(dir + "/test/foo.sql", "hello!");
 
-            myss.list(["test"]);
+            runner.list(["test"]);
 
             setTimeout(function():void {
                 assert.equal(printlnSpy.called, true);
@@ -242,7 +243,7 @@ describe("myss", function():void {
             fs.outputFileSync(dir + "/test/default.sql", "hello!");
 
             var firstCall:SinonSpy = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
-            myss.use(["test"]);
+            runner.use(["test"]);
 
             setTimeout(function():void {
                 assert.equal(firstCall.calledOnce, true);
@@ -253,7 +254,7 @@ describe("myss", function():void {
 
         it("use not exist database", function(done:MochaDone):void {
             var firstCall:SinonSpy = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
-            myss.use(["test"]);
+            runner.use(["test"]);
 
             setTimeout(function():void {
                 assert.equal(firstCall.calledOnce, false);
@@ -266,7 +267,7 @@ describe("myss", function():void {
             fs.mkdirsSync(dir + "/test");
 
             var firstCall:SinonSpy = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
-            myss.use(["test"]);
+            runner.use(["test"]);
 
             setTimeout(function():void {
                 assert.equal(firstCall.calledOnce, false);

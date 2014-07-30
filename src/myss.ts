@@ -1,11 +1,9 @@
 /// <reference path="../typings/tsd.d.ts" />
 
-var pjson = require('../package.json'),
-    program = require('commander'),
-    MyssCore = require('./myss-core');
+import program = require('commander');
+import myss = require('./myss-core');
 
-program
-    .version(pjson.version)
+var cmd:program.Command = program.version(require('../package.json').version)
     .option("add <database name> <snapshot name>", "add database snapshot.")
     .option("replace <database name> <snapshot name>", "add or replace database snapshot.")
     .option("use <database name> <snapshot name>", "use database snapshot.")
@@ -15,13 +13,14 @@ program
     .option("list <database name>", "list database snapshots.")
     .parse(process.argv);
 
-if (program.rawArgs.length >= 3) {
-    var command = program.rawArgs[2],
-        args = program.rawArgs.slice(3, program.rawArgs.length);
+if (cmd.rawArgs.length >= 3) {
+    var command = cmd.rawArgs[2],
+        args = cmd.rawArgs.slice(3, cmd.rawArgs.length);
 
-    new MyssCore(
-        (process.env[MyssCore.ENV_MYSS_HOME] || process.env["HOME"] + "/.myss")
+    new myss.Runner(
+        (process.env[myss.ENV_MYSS_HOME] || process.env["HOME"] + "/.myss")
     ).exec(command, args);
 } else {
-    program.help();
+    cmd.help();
 }
+

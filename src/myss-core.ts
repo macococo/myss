@@ -1,20 +1,26 @@
 /// <reference path="../typings/tsd.d.ts" />
 
-var pjson = require('../package.json'),
-    _:UnderscoreStatic = require("underscore"),
-    program = require('commander'),
-    util = require("util"),
-    fs = require("fs-extra"),
-    exec = require('child_process').exec,
-    Promise = require('promise');
+import _ = require("underscore");
+import util = require("util");
+import fs = require("fs-extra");
+import child_process = require('child_process');
+import Promise = require('promise');
 
-class Myss {
+// Constants
+export var ENV_MYSS_HOME:string = "MYSS_HOME";
+export var ENV_MYSS_MYSQLDUMP_OPTIONS:string = "MYSS_MYSQLDUMP_OPTIONS";
+export var DEFAULT_SNAPSHOT_NAME:string = "default";
 
-    static ENV_MYSS_HOME:string = "MYSS_HOME";
+// Utilities
+export function fmterror(...message:any[]):void {
+    util.error(util.format.apply(this, message));
+}
 
-    static ENV_MYSS_MYSQLDUMP_OPTIONS:string = "MYSS_MYSQLDUMP_OPTIONS";
+export function println(message:string):void {
+    util.print(message + "\n");
+}
 
-    static DEFAULT_SNAPSHOT_NAME:string = "default";
+export class Runner {
 
     home:string;
 
@@ -30,7 +36,7 @@ class Myss {
 
     public add(targets:string[]):void {
         if (_.isEmpty(targets)) {
-            return Myss.fmterror("invalid arguments.");
+            return fmterror("invalid arguments.");
         }
 
         this.addSnapshot(this.createOptions(targets), false);
@@ -38,7 +44,7 @@ class Myss {
 
     public replace(targets:string[]):void {
         if (_.isEmpty(targets)) {
-            return Myss.fmterror("invalid arguments.");
+            return fmterror("invalid arguments.");
         }
 
         this.addSnapshot(this.createOptions(targets), true);
@@ -49,14 +55,16 @@ class Myss {
 
         this.existDatabase(options.db).then(function(exists:boolean):void {
             if (!exists) {
-                Myss.fmterror("database '%s' not found.", options.db);
+                fmterror("database '%s' not found.", options.db);
             } else {
                 this.mkdirIfNotExist(options.dbDir).then(function(exists:boolean):void {
                     if (!replace && fs.existsSync(dumpPath)) {
-                        Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
+                        fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
                     } else {
-                        var dumpOptions = options.options || process.env[Myss.ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";
+                        var dumpOptions = options.options || process.env[ENV_MYSS_MYSQLDUMP_OPTIONS] || "-u root";
                         this.execCommand("mysqldump " + dumpOptions + " " + options.db + " > " + dumpPath);
+
+                        new Config(options.dbDir).setLastSnapshotName(options.snapName).write();
                     }
                 }.bind(this));
             }
@@ -65,19 +73,20 @@ class Myss {
 
     public use(targets:string[]):void {
         if (_.isEmpty(targets)) {
-            return Myss.fmterror("arguments invalid.");
+            return fmterror("arguments invalid.");
         }
 
         var options = this.createOptions(targets),
             dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
         if (!fs.existsSync(options.dbDir)) {
-            Myss.fmterror("database '%s' not found.", options.db);
+            fmterror("database '%s' not found.", options.db);
         } else {
             if (!fs.existsSync(dumpPath)) {
-                Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
+                fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
             } else {
                 this.execCommand("mysql -uroot " + options.db + " < " + dumpPath);
+                new Config(options.dbDir).setLastSnapshotName(options.snapName).write();
             }
         }
     }
@@ -87,18 +96,22 @@ class Myss {
 
         this.mkdirIfNotExist(options.dbDir).then(function(exists:boolean):void {
             if (options.db) {
+                var config = new Config(options.dbDir);
+
                 fs.readdirSync(options.dbDir)
                     .filter(function(file){
                         return fs.statSync(options.dbDir + "/" + file).isFile();
                     }).forEach(function (file) {
-                        Myss.println(file.substring(0, file.lastIndexOf(".")));
+                        var snapName:string = file.substring(0, file.lastIndexOf(".")),
+                            suffix:string = config.lastSnapshotName == snapName ? " (last)" : "";
+                        println(snapName + suffix);
                     });
             } else {
                 fs.readdirSync(this.home)
                     .filter(function(file){
                         return fs.statSync(options.dbDir + "/" + file).isDirectory();
                     }).forEach(function (file) {
-                        Myss.println(file);
+                        println(file);
                     });
             }
         }.bind(this));
@@ -106,28 +119,28 @@ class Myss {
 
     public delete(targets:string[]):void {
         if (_.isEmpty(targets)) {
-            return Myss.fmterror("arguments invalid.");
+            return fmterror("arguments invalid.");
         }
 
         var options = this.createOptions(targets);
         if (targets.length == 1) {
             var path:string = options.dbDir;
             if (!fs.existsSync(path)) {
-                Myss.fmterror("database '%s' not found.", options.db);
+                fmterror("database '%s' not found.", options.db);
             } else {
-                Myss.println("delete: " + path);
+                println("delete: " + path);
                 fs.removeSync(path);
             }
         } else {
             var path:string = options.dbDir + "/" + options.snapName + ".sql";
             if (!fs.existsSync(path)) {
-                Myss.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
+                fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
             } else {
                 var files = fs.readdirSync(options.dbDir);
                 if (files.length == 1) {
-                    Myss.fmterror("database snapshot is not possible to delete all.");
+                    fmterror("database snapshot is not possible to delete all.");
                 } else {
-                    Myss.println("delete: " + path);
+                    println("delete: " + path);
                     fs.removeSync(path);
                 }
             }
@@ -141,7 +154,7 @@ class Myss {
         return {
             db: db,
             dbDir: this.home + "/" + db,
-            snapName: this.escapePathDelimiter(this.extract(targets, 1) || Myss.DEFAULT_SNAPSHOT_NAME),
+            snapName: this.escapePathDelimiter(this.extract(targets, 1) || DEFAULT_SNAPSHOT_NAME),
             options: this.extract(targets, 2)
         }
     }
@@ -154,7 +167,7 @@ class Myss {
         return path.replace(/[\\\/]/g, '_');
     }
 
-    private existDatabase(db:string):PromiseTs.Promise {
+    private existDatabase(db:string):Promise {
         return new Promise(function(resolve, reject):void {
             this.execCommand("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = '" + db + "'\"")
                 .then(function(stdout:string):void {
@@ -163,17 +176,17 @@ class Myss {
         }.bind(this));
     }
 
-    private execCommand(cmd:string):PromiseTs.Promise {
-        Myss.println(cmd);
+    private execCommand(cmd:string):Promise {
+        println(cmd);
         return new Promise(function(resolve, reject):void {
-            exec(cmd, function(err, stdout, stderr):void {
+            child_process.exec(cmd, function(err, stdout, stderr):void {
                 if (err) reject(err);
                 resolve(stdout);
             });
         });
     }
 
-    private mkdirIfNotExist(dir:string):PromiseTs.Promise {
+    private mkdirIfNotExist(dir:string):Promise {
         return new Promise(function(resolve, reject):void {
             if (!fs.existsSync(dir)) {
                 fs.mkdirsSync(dir);
@@ -184,14 +197,36 @@ class Myss {
         });
     }
 
-    private static fmterror(...message:any[]):void {
-        util.error(util.format.apply(this, message));
+}
+
+export class Config {
+
+    path:string;
+
+    lastSnapshotName:string;
+
+    constructor(path:string) {
+        this.path = path;
+
+        var jsonPath:string = this.path + "/config.json";
+        if (fs.existsSync(jsonPath)) {
+            var json = fs.readJsonSync(jsonPath);
+            _.extend(this, json);
+        }
     }
 
-    private static println(message:string):void {
-        util.print(message + "\n");
+    public setLastSnapshotName(lastSnapshotName:string):Config {
+        this.lastSnapshotName = lastSnapshotName;
+        return this;
+    }
+
+    public static read(path:string) {
+        var config = new Config(path);
+
+    }
+
+    public write():void {
+        fs.outputFileSync(this.path + "/config.json", JSON.stringify(this));
     }
 
 }
-
-module.exports = Myss;
