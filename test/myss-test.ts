@@ -26,7 +26,7 @@ describe("myss", function():void {
         });
 
         it("add database without snapshot name", function(done:MochaDone):void {
-            var firstCall:SinonSpy = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
+            var firstCall:SinonSpy = execStub.withArgs("mysql -u root -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall:SinonSpy = execStub.withArgs("mysqldump -u root test > ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.add(["test"]);
 
@@ -39,7 +39,7 @@ describe("myss", function():void {
         });
 
         it("add database with snapshot name", function(done:MochaDone):void {
-            var firstCall:SinonSpy = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
+            var firstCall:SinonSpy = execStub.withArgs("mysql -u root -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall:SinonSpy = execStub.withArgs("mysqldump -u root test > ./testdata/test/master.sql").callsArgWith(1, "", "success", "");
             runner.add(["test", "master"]);
 
@@ -52,7 +52,7 @@ describe("myss", function():void {
         });
 
         it("add not exist database", function(done:MochaDone):void {
-            var firstCall:SinonSpy = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "", "");
+            var firstCall:SinonSpy = execStub.withArgs("mysql -u root -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "", "");
             var secondCall:SinonSpy = execStub.withArgs("mysqldump -u root test > ./testdata/test/master.sql").callsArgWith(1, "", "success", "");
             runner.add(["test"]);
 
@@ -82,7 +82,7 @@ describe("myss", function():void {
             fs.mkdirsSync(dir + "/test");
             fs.outputFileSync(dir + "/test/default.sql", "hello!");
 
-            var firstCall:SinonSpy = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
+            var firstCall:SinonSpy = execStub.withArgs("mysql -u root -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall:SinonSpy = execStub.withArgs("mysqldump -u root test > ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.replace(["test"]);
 
@@ -242,7 +242,7 @@ describe("myss", function():void {
             fs.mkdirsSync(dir + "/test");
             fs.outputFileSync(dir + "/test/default.sql", "hello!");
 
-            var firstCall:SinonSpy = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
+            var firstCall:SinonSpy = execStub.withArgs("mysql -u root test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.use(["test"]);
 
             setTimeout(function():void {
@@ -253,7 +253,7 @@ describe("myss", function():void {
         });
 
         it("use not exist database", function(done:MochaDone):void {
-            var firstCall:SinonSpy = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
+            var firstCall:SinonSpy = execStub.withArgs("mysql -u root test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.use(["test"]);
 
             setTimeout(function():void {
@@ -266,7 +266,7 @@ describe("myss", function():void {
         it("use not exist database snapshot", function(done:MochaDone):void {
             fs.mkdirsSync(dir + "/test");
 
-            var firstCall:SinonSpy = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
+            var firstCall:SinonSpy = execStub.withArgs("mysql -u root test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.use(["test"]);
 
             setTimeout(function():void {

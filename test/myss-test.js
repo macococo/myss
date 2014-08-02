@@ -21,7 +21,7 @@ describe("myss", function () {
         });
 
         it("add database without snapshot name", function (done) {
-            var firstCall = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
+            var firstCall = execStub.withArgs("mysql -u root -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall = execStub.withArgs("mysqldump -u root test > ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.add(["test"]);
 
@@ -34,7 +34,7 @@ describe("myss", function () {
         });
 
         it("add database with snapshot name", function (done) {
-            var firstCall = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
+            var firstCall = execStub.withArgs("mysql -u root -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall = execStub.withArgs("mysqldump -u root test > ./testdata/test/master.sql").callsArgWith(1, "", "success", "");
             runner.add(["test", "master"]);
 
@@ -47,7 +47,7 @@ describe("myss", function () {
         });
 
         it("add not exist database", function (done) {
-            var firstCall = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "", "");
+            var firstCall = execStub.withArgs("mysql -u root -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "", "");
             var secondCall = execStub.withArgs("mysqldump -u root test > ./testdata/test/master.sql").callsArgWith(1, "", "success", "");
             runner.add(["test"]);
 
@@ -75,7 +75,7 @@ describe("myss", function () {
             fs.mkdirsSync(dir + "/test");
             fs.outputFileSync(dir + "/test/default.sql", "hello!");
 
-            var firstCall = execStub.withArgs("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
+            var firstCall = execStub.withArgs("mysql -u root -e \"SELECT * FROM information_schema.schemata WHERE schema_name = 'test'\"").callsArgWith(1, "", "success", "");
             var secondCall = execStub.withArgs("mysqldump -u root test > ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.replace(["test"]);
 
@@ -231,7 +231,7 @@ describe("myss", function () {
             fs.mkdirsSync(dir + "/test");
             fs.outputFileSync(dir + "/test/default.sql", "hello!");
 
-            var firstCall = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
+            var firstCall = execStub.withArgs("mysql -u root test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.use(["test"]);
 
             setTimeout(function () {
@@ -242,7 +242,7 @@ describe("myss", function () {
         });
 
         it("use not exist database", function (done) {
-            var firstCall = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
+            var firstCall = execStub.withArgs("mysql -u root test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.use(["test"]);
 
             setTimeout(function () {
@@ -255,7 +255,7 @@ describe("myss", function () {
         it("use not exist database snapshot", function (done) {
             fs.mkdirsSync(dir + "/test");
 
-            var firstCall = execStub.withArgs("mysql -uroot test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
+            var firstCall = execStub.withArgs("mysql -u root test < ./testdata/test/default.sql").callsArgWith(1, "", "success", "");
             runner.use(["test"]);
 
             setTimeout(function () {
