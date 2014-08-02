@@ -22,6 +22,7 @@ ENV
 |:-----|:------------|:--------|
 | MYSS_HOME | myss home directory | ~/.myss |
 | MYSS_MYSQLDUMP_OPTIONS | mysqldump command option | -u root |
+| MYSS_MYSQL_OPTIONS | mysql command option | -u root |
 
 Examples
 ========

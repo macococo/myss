@@ -9,6 +9,7 @@ import Promise = require('promise');
 // Constants
 export var ENV_MYSS_HOME:string = "MYSS_HOME";
 export var ENV_MYSS_MYSQLDUMP_OPTIONS:string = "MYSS_MYSQLDUMP_OPTIONS";
+export var ENV_MYSS_MYSQL_OPTIONS:string = "MYSS_MYSQL_OPTIONS";
 export var DEFAULT_SNAPSHOT_NAME:string = "default";
 
 // Utilities
@@ -53,7 +54,7 @@ export class Runner {
     private addSnapshot(options:any, replace:boolean):void {
         var dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
-        this.existDatabase(options.db).then(function(exists:boolean):void {
+        this.existDatabase(options).then(function(exists:boolean):void {
             if (!exists) {
                 fmterror("database '%s' not found.", options.db);
             } else {
@@ -85,7 +86,8 @@ export class Runner {
             if (!fs.existsSync(dumpPath)) {
                 fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
             } else {
-                this.execCommand("mysql -uroot " + options.db + " < " + dumpPath);
+                var impOptions = options.options || process.env[ENV_MYSS_MYSQL_OPTIONS] || "-u root";
+                this.execCommand("mysql " + impOptions + " " + options.db + " < " + dumpPath);
                 new Config(options.dbDir).setLastSnapshotName(options.snapName).write();
             }
         }
@@ -167,9 +169,10 @@ export class Runner {
         return path.replace(/[\\\/]/g, '_');
     }
 
-    private existDatabase(db:string):Promise {
+    private existDatabase(options:any):Promise {
         return new Promise(function(resolve, reject):void {
-            this.execCommand("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = '" + db + "'\"")
+            var impOptions = options.options || process.env[ENV_MYSS_MYSQL_OPTIONS] || "-u root";
+            this.execCommand("mysql " + impOptions + " -e \"SELECT * FROM information_schema.schemata WHERE schema_name = '" + options.db + "'\"")
                 .then(function(stdout:string):void {
                     resolve(!!stdout);
                 });

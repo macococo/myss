@@ -6,6 +6,7 @@ var Promise = require('promise');
 
 exports.ENV_MYSS_HOME = "MYSS_HOME";
 exports.ENV_MYSS_MYSQLDUMP_OPTIONS = "MYSS_MYSQLDUMP_OPTIONS";
+exports.ENV_MYSS_MYSQL_OPTIONS = "MYSS_MYSQL_OPTIONS";
 exports.DEFAULT_SNAPSHOT_NAME = "default";
 
 function fmterror() {
@@ -51,7 +52,7 @@ var Runner = (function () {
     Runner.prototype.addSnapshot = function (options, replace) {
         var dumpPath = options.dbDir + "/" + options.snapName + ".sql";
 
-        this.existDatabase(options.db).then(function (exists) {
+        this.existDatabase(options).then(function (exists) {
             if (!exists) {
                 exports.fmterror("database '%s' not found.", options.db);
             } else {
@@ -82,7 +83,8 @@ var Runner = (function () {
             if (!fs.existsSync(dumpPath)) {
                 exports.fmterror("database snapshot '%s:%s' already exists.", options.db, options.snapName);
             } else {
-                this.execCommand("mysql -uroot " + options.db + " < " + dumpPath);
+                var impOptions = options.options || process.env[exports.ENV_MYSS_MYSQL_OPTIONS] || "-u root";
+                this.execCommand("mysql " + impOptions + " " + options.db + " < " + dumpPath);
                 new Config(options.dbDir).setLastSnapshotName(options.snapName).write();
             }
         }
@@ -161,9 +163,10 @@ var Runner = (function () {
         return path.replace(/[\\\/]/g, '_');
     };
 
-    Runner.prototype.existDatabase = function (db) {
+    Runner.prototype.existDatabase = function (options) {
         return new Promise(function (resolve, reject) {
-            this.execCommand("mysql -uroot -e \"SELECT * FROM information_schema.schemata WHERE schema_name = '" + db + "'\"").then(function (stdout) {
+            var impOptions = options.options || process.env[exports.ENV_MYSS_MYSQL_OPTIONS] || "-u root";
+            this.execCommand("mysql " + impOptions + " -e \"SELECT * FROM information_schema.schemata WHERE schema_name = '" + options.db + "'\"").then(function (stdout) {
                 resolve(!!stdout);
             });
         }.bind(this));
