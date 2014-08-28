@@ -21,8 +21,6 @@ ENV
 | name | description | default |
 |:-----|:------------|:--------|
 | MYSS_HOME | myss home directory | ~/.myss |
-| MYSS_MYSQLDUMP_OPTIONS | mysqldump command option | -u root |
-| MYSS_MYSQL_OPTIONS | mysql command option | -u root |
 
 Examples
 ========
@@ -67,4 +65,31 @@ delete managed database.
 
 ```
 $ myss delete <database name>
+```
+
+Configuration
+=============
+
+| name | description | default |
+|:-----|:------------|:--------|
+| mysqldump_options | mysqldump command option | -u root |
+| mysql_options | mysql command option | -u root |
+| auto_replace | replace automatically, at "use" command | false |
+
+display all config.
+
+```
+$ myss config
+```
+
+show config.
+
+```
+$ myss config <name>
+```
+
+set config.
+
+```
+$ myss config <name> <value>
 ```
