@@ -31,6 +31,9 @@
     },
     "assert/assert.d.ts": {
       "commit": "2f785c6abdba5c28e886b4d134966acc868018ce"
+    },
+    "moment/moment.d.ts": {
+      "commit": "9d2478b8a80febe1d89a5d35cdf6051d121f5437"
     }
   }
 }

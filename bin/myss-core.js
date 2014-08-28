@@ -3,6 +3,7 @@ var util = require("util");
 var fs = require("fs-extra");
 var child_process = require('child_process');
 var Promise = require('promise');
+var moment = require('moment');
 
 exports.ENV_MYSS_HOME = "MYSS_HOME";
 exports.DEFAULT_SNAPSHOT_NAME = "default";
@@ -144,12 +145,23 @@ var Runner = (function () {
             if (options.db) {
                 var config = new Config(options.dbDir);
 
-                fs.readdirSync(options.dbDir).filter(function (file) {
-                    return fs.statSync(options.dbDir + "/" + file).isFile();
-                }).forEach(function (file) {
-                    var snapName = file.substring(0, file.lastIndexOf(".")), suffix = config.lastSnapshotName == snapName ? " (last)" : "";
-                    exports.println(snapName + suffix);
+                var matrix = new Matrix();
+                fs.readdirSync(options.dbDir).forEach(function (file) {
+                    var stat = fs.statSync(options.dbDir + "/" + file);
+                    if (!stat.isFile()) {
+                        return;
+                    }
+
+                    var snapName = file.substring(0, file.lastIndexOf("."));
+
+                    matrix.set(0, config.lastSnapshotName == snapName ? "*" : "");
+                    matrix.set(1, snapName);
+                    matrix.set(2, moment(stat.mtime).format("YYYY-MM-DD HH:mm:ss"));
+                    matrix.set(3, stat.size);
+                    matrix.next();
                 });
+
+                matrix.print();
             } else {
                 fs.readdirSync(this.home).filter(function (file) {
                     return fs.statSync(options.dbDir + "/" + file).isDirectory();
@@ -243,6 +255,42 @@ var Runner = (function () {
     return Runner;
 })();
 exports.Runner = Runner;
+
+var Matrix = (function () {
+    function Matrix() {
+        this.records = [];
+        this.maxLength = [];
+        this.row = 0;
+    }
+    Matrix.prototype.set = function (col, value) {
+        var record = this.records[this.row] = this.records[this.row] || [];
+        this.records[this.row][col] = value;
+
+        if (value != null) {
+            var max = this.maxLength[col];
+            if (max == undefined || max < new String(value).length) {
+                this.maxLength[col] = new String(value).length;
+            }
+        }
+    };
+
+    Matrix.prototype.next = function () {
+        this.row++;
+    };
+
+    Matrix.prototype.print = function () {
+        for (var row = 0; row < this.records.length; row++) {
+            var record = this.records[row];
+            for (var col = 0; col < record.length; col++) {
+                var max = this.maxLength[col];
+                util.print(record[col] + Array(max - new String(record[col]).length + 3).join(" "));
+            }
+            util.print("\n");
+        }
+    };
+    return Matrix;
+})();
+exports.Matrix = Matrix;
 
 var GlobalConfig = (function () {
     function GlobalConfig(path) {

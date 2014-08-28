@@ -5,6 +5,7 @@ import util = require("util");
 import fs = require("fs-extra");
 import child_process = require('child_process');
 import Promise = require('promise');
+import moment = require('moment');
 
 // Constants
 export var ENV_MYSS_HOME:string = "MYSS_HOME";
@@ -150,14 +151,23 @@ export class Runner {
             if (options.db) {
                 var config = new Config(options.dbDir);
 
-                fs.readdirSync(options.dbDir)
-                    .filter(function(file){
-                        return fs.statSync(options.dbDir + "/" + file).isFile();
-                    }).forEach(function (file) {
-                        var snapName:string = file.substring(0, file.lastIndexOf(".")),
-                            suffix:string = config.lastSnapshotName == snapName ? " (last)" : "";
-                        println(snapName + suffix);
-                    });
+                var matrix = new Matrix();
+                fs.readdirSync(options.dbDir).forEach(function (file) {
+                    var stat = fs.statSync(options.dbDir + "/" + file);
+                    if (!stat.isFile()) {
+                        return;
+                    }
+
+                    var snapName:string = file.substring(0, file.lastIndexOf("."));
+
+                    matrix.set(0, config.lastSnapshotName == snapName ? "*" : "");
+                    matrix.set(1, snapName);
+                    matrix.set(2, moment(stat.mtime).format("YYYY-MM-DD HH:mm:ss"));
+                    matrix.set(3, stat.size);
+                    matrix.next();
+                });
+
+                matrix.print();
             } else {
                 fs.readdirSync(this.home)
                     .filter(function(file){
@@ -248,6 +258,43 @@ export class Runner {
                 resolve(true);
             }
         });
+    }
+
+}
+
+export class Matrix {
+
+    records:any = [];
+
+    maxLength:number[] = [];
+
+    row:number = 0;
+
+    public set(col, value):void {
+        var record = this.records[this.row] = this.records[this.row] || [];
+        this.records[this.row][col] = value;
+
+        if (value != null) {
+            var max = this.maxLength[col];
+            if (max == undefined || max < new String(value).length) {
+                this.maxLength[col] = new String(value).length;
+            }
+        }
+    }
+
+    public next():void {
+        this.row++;
+    }
+
+    public print():void {
+        for (var row = 0; row < this.records.length; row++) {
+            var record = this.records[row];
+            for (var col = 0; col < record.length; col++) {
+                var max:number = this.maxLength[col];
+                util.print(record[col] + Array(max - new String(record[col]).length + 3).join(" "));
+            }
+            util.print("\n");
+        }
     }
 
 }
