@@ -209,7 +209,7 @@ describe("myss", function () {
 
             setTimeout(function () {
                 assert.equal(printlnSpy.called, true);
-                assert.equal(printlnSpy.getCall(0).args, "foo");
+                assert.equal(new String(printlnSpy.getCall(0).args).substring(2, 5), "foo");
 
                 done();
             }, 100);

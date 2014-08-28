@@ -289,11 +289,12 @@ export class Matrix {
     public print():void {
         for (var row = 0; row < this.records.length; row++) {
             var record = this.records[row];
+            var buffer = [];
             for (var col = 0; col < record.length; col++) {
                 var max:number = this.maxLength[col];
-                util.print(record[col] + Array(max - new String(record[col]).length + 3).join(" "));
+                buffer.push(record[col] + Array(max - new String(record[col]).length + 3).join(" "));
             }
-            util.print("\n");
+            println(buffer.join(""));
         }
     }
 
