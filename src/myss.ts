@@ -4,6 +4,9 @@ import program = require('commander');
 import myss = require('./myss-core');
 
 var cmd:program.Command = program.version(require('../package.json').version)
+    .option("config", "list config.")
+    .option("config <name>", "show config.")
+    .option("config <name> <value>", "set config.")
     .option("add <database name> <snapshot name>", "add database snapshot.")
     .option("replace <database name> <snapshot name>", "add or replace database snapshot.")
     .option("use <database name> <snapshot name>", "use database snapshot.")
