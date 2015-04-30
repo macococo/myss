@@ -147,6 +147,10 @@ var Runner = (function () {
 
                 var matrix = new Matrix();
                 fs.readdirSync(options.dbDir).forEach(function (file) {
+                    if (file.indexOf(".sql") < 0) {
+                        return;
+                    }
+
                     var stat = fs.statSync(options.dbDir + "/" + file);
                     if (!stat.isFile()) {
                         return;
@@ -284,7 +288,6 @@ var Matrix = (function () {
             var buffer = [];
             for (var col = 0; col < record.length; col++) {
                 var max = this.maxLength[col];
-
                 buffer.push(record[col] + Array(max - new String(record[col]).length + 3).join(" "));
             }
             exports.println(buffer.join(""));

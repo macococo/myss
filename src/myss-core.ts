@@ -153,6 +153,10 @@ export class Runner {
 
                 var matrix = new Matrix();
                 fs.readdirSync(options.dbDir).forEach(function (file) {
+                    if (file.indexOf(".sql") < 0) {
+                        return;
+                    }
+
                     var stat = fs.statSync(options.dbDir + "/" + file);
                     if (!stat.isFile()) {
                         return;
